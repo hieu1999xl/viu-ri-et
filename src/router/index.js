@@ -8,7 +8,7 @@ import Snackbar from '../pages/Snackbar.vue';
 import Chart from '../pages/Chart.vue';
 import Mailbox from '../pages/Mailbox.vue';
 import Calendar from '../pages/Calendar.vue';
-import Todo from '../pages/Todo.vue'
+import Todo from '../pages/Todo/Todo.vue'
 import Login from '../pages/core/Login.vue';
 import Error from '../pages/core/Error.vue';
 

@@ -50,8 +50,8 @@
           <td class="text-xs-left">{{ props.item.investment }}</td>
           <td class="text-xs-left">{{ props.item.time }}</td>
           <td class="layout">
-            <v-icon small class="mr-2" @click="editItem(props.item)"> edit</v-icon>
-            <v-icon small @click="deleteItem(props.item)"> delete</v-icon>
+            <v-icon small class="mr-2" @click="editItem(props.item.id)"> edit</v-icon>
+            <v-icon small @click="deleteItem(props.item.id)"> delete</v-icon>
           </td>
         </template>
         <template slot="no-data"><v-btn color="primary" @click="initialize">Reset</v-btn></template>
@@ -64,6 +64,9 @@
 
 
 <script>
+
+import {HTTP} from '../api/api'
+
 export default {
     data: () => ({
     dialog: false,
@@ -76,31 +79,20 @@ export default {
       { text: 'Hành động', value: 'name', sortable: false }
     ],
     projects: [],
+    errors: [],
     editedIndex: -1,
     editedItem: {
       investor: '',
       project: '',
       investment: '',
       time: ''
-    },
-    defaultItem: {
-      investor: '',
-      project: '',
-      investment: '',
-      time: ''
     }
   }),
-  computed: {    
-    formTitle () {
-      return this.editedIndex === -1 ? 'New Item' : 'Edit Item'
-    }
-  },
-  
   created () {
-    this.loadAlbums()
+    this.loadProjects()
   },
   mounted() {
-    
+    console.log('projects', projects);
   },
   watch: {
     dialog (val) {
@@ -114,55 +106,54 @@ export default {
   },
   methods: {
     editItem (item) {
-      this.editedIndex = this.projects.indexOf(item)
-      this.editedItem = Object.assign({}, item)
-      this.saveProjects();
+    this.editedIndex = 1
+    console.log('this.editedIndex', this.editedIndex);
+    this.editedIndex = this.projects.indexOf(item)
+     this.editedItem = Object.assign({}, item)
+    HTTP.patch(`projects/${item}`, this.editedItem)
+    .then(res => {
+      console.log('sửa thành công');
+    })
+    .catch(e => {
+      this.errors.push(e)
+    })
       this.dialog = true
     },
     deleteItem (item) {
-      const index = this.projects.indexOf(item)
       if ( confirm("Are you sure you want to delete this item?") === true) {
-        this.projects.splice(index, 1)
-        alert('Deleted Album')
-        this.saveProjects()
+        HTTP.delete(`projects/${item}`)
+        .then(() =>   loadProjects());
       } else {
-        alert('ABORTED Delete Album')
+        alert('ABORTED Delete Projects')
       }      
-      // confirm('Are you sure you want to delete this item?') && this.projects.splice(index, 1)
-      // this.saveProjects();
     },
     close () {
       this.dialog = false
       setTimeout(() => {
-        this.editedItem = Object.assign({}, this.defaultItem)
         this.editedIndex = -1
       }, 300)
     },
     save () {
-      if (this.editedIndex > -1) {
-        Object.assign(this.projects[this.editedIndex], this.editedItem)
-        //this.saveProjects();
-      } else {
-        this.projects.push(this.editedItem)
-        //this.saveProjects();
-      }
       this.saveProjects();
       this.close()    
     },    
     saveProjects() {
-      alert('Saving ALL projects to Local Storage')
-      let parsed = JSON.stringify(this.projects);
-      localStorage.setItem('projects', parsed);
+    HTTP.post(`projects`, this.editedItem)
+    .then(res => {
+    })
+    .catch(e => {
+      this.errors.push(e)
+    })
     },
-    loadAlbums() {
-      // Loads localStorage.getItem('projects'))
-      if(localStorage.getItem('projects')) {
-        try {
-          this.projects = JSON.parse(localStorage.getItem('projects'));
-        } catch(e) {
-          localStorage.removeItem('projects');
-        }
-      }      
+    loadProjects() {
+      HTTP.get(`projects`)
+      .then(res => {
+        console.log('res', res);
+        this.projects =res.data
+      })
+      .catch(e => {
+        this.errors.push(e)
+      })     
     },
   }
 }
